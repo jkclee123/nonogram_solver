@@ -6,8 +6,8 @@ class BoardModel {
   void init(int rowSize, int colSize) {
     _rowSize = rowSize;
     _colSize = colSize;
-    _boardArray =
-        List.generate(rowSize, (index) => List(colSize), growable: false);
+    _boardArray = List.generate(
+        _rowSize, (rowIndex) => List.generate(_colSize, (colIndex) => null));
   }
 
   List<List<bool>> getBoard() {

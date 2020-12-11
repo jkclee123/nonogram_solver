@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nonogram_solver/controller/game_controller.dart';
-import 'package:theme_provider/theme_provider.dart';
 import 'package:nonogram_solver/config/style_config.dart';
 import 'package:nonogram_solver/config/const.dart' as Const;
 import 'package:mvc_pattern/mvc_pattern.dart';
@@ -21,7 +20,7 @@ class _MainPageState extends StateMVC<MainPage> {
 
   @override
   void initState() {
-    _gameController.initBoard(10, 10);
+    _gameController.setSize(10, 10);
     super.initState();
   }
 
@@ -39,63 +38,68 @@ class _MainPageState extends StateMVC<MainPage> {
           StyleConfig().init(constraints);
           return Center(
               child: Column(children: <Widget>[
-            Container(
-                margin: EdgeInsets.all(20),
-                child: Table(
-                  border: TableBorder.all(
-                      color: Colors.black, width: 1, style: BorderStyle.solid),
-                  children: _boardWidget(),
-                ))
+            Wrap(
+              direction: Axis.horizontal,
+              alignment: WrapAlignment.center,
+              children: _settingsBtnList(),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: _boardWidget(),
+            )
           ]));
         }));
   }
 
-  List<TableRow> _boardWidget() {
-    _gameController.setCell(2, 6, true);
-    _gameController.setCell(1, 6, false);
-    List<TableRow> tableRowList = new List<TableRow>();
-    for (int rowIndex = 0; rowIndex < 10; rowIndex++) {
-      TableRow tableRow = new TableRow(children: []);
-      for (int colIndex = 0; colIndex < 10; colIndex++) {
-        print(_gameController.getCell(rowIndex, colIndex));
-        if (_gameController.getCell(rowIndex, colIndex) == null) {
-          tableRow.children.add(_getEmptyCell());
-        } else if (_gameController.getCell(rowIndex, colIndex)) {
-          tableRow.children.add(_getDotCell());
-        } else if (!_gameController.getCell(rowIndex, colIndex)) {
-          tableRow.children.add(_getCrossCell());
-        }
+  List<Row> _boardWidget() {
+    List<Row> rowList = [];
+    for (int rowIndex = 0;
+        rowIndex < _gameController.boardRowSize;
+        rowIndex++) {
+      Row row = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: []);
+      for (int colIndex = 0;
+          colIndex < _gameController.boardColSize;
+          colIndex++) {
+        row.children.add(_getCell());
       }
-      tableRowList.add(tableRow);
+      rowList.add(row);
     }
-    return tableRowList;
+    return rowList;
   }
 
-  TableCell _getDotCell() {
-    return TableCell(
-        child: Container(
-      width: 10,
-      height: 10,
-      color: Colors.black,
-    ));
+  Container _getCell() {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        border: new Border.all(color: Colors.grey[500]),
+        color: Colors.white,
+      ),
+    );
   }
 
-  TableCell _getCrossCell() {
-    return TableCell(
-        child: Container(
-      width: 10,
-      height: 10,
-      color: Colors.white,
-      child: Icon(Icons.cancel_presentation_outlined),
-    ));
-  }
-
-  TableCell _getEmptyCell() {
-    return TableCell(
-        child: Container(
-      width: 10,
-      height: 10,
-      color: Colors.white,
-    ));
+  List<Widget> _settingsBtnList() {
+    return [
+      Padding(
+          padding: EdgeInsets.all(20),
+          child: RaisedButton(
+            color: Colors.amberAccent[400],
+            child: Icon(Icons.lightbulb_outline),
+            onPressed: () => _gameController.nextTheme(),
+          )),
+      Padding(
+          padding: EdgeInsets.all(20),
+          child: RaisedButton(
+            color: Colors.redAccent,
+            child: Icon(Icons.refresh_outlined),
+            onPressed: () {
+              setState(() => _gameController.initBoard());
+            },
+          ))
+    ];
   }
 }
