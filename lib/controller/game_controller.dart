@@ -7,12 +7,16 @@ class GameController extends ControllerMVC {
   GameController([StateMVC state]) : super(state) {
     _answerBoardModel = BoardModel();
     _boardInited = false;
+    _rowHintControllerList = [];
+    _colHintControllerList = [];
   }
   BoardModel _answerBoardModel;
   ThemeController _themeController;
   int _rowSize;
   int _colSize;
   bool _boardInited;
+  List<TextEditingController> _rowHintControllerList;
+  List<TextEditingController> _colHintControllerList;
 
   void initTheme(BuildContext context) =>
       _themeController = ThemeProvider.controllerOf(context);
@@ -20,12 +24,35 @@ class GameController extends ControllerMVC {
   void initBoard() {
     if (_rowSize != null && _colSize != null) {
       _answerBoardModel.init(_rowSize, _colSize);
+      _rowHintControllerList.clear();
+      _colHintControllerList.clear();
+      _rowHintControllerList =
+          List.generate(_rowSize, (_) => TextEditingController());
+      _colHintControllerList =
+          List.generate(_colSize, (_) => TextEditingController());
       _boardInited = true;
     }
   }
 
-  bool getCell(int rowIndex, int colIndex) =>
-      _answerBoardModel.getCell(rowIndex, colIndex);
+  TextEditingController getHintController(index) {
+    if (_isRowHintCell(index)) {
+      return _rowHintControllerList[index ~/ boardColSize - 1];
+    } else if (_isColHintCell(index)) {
+      return _colHintControllerList[index - 1];
+    }
+  }
+
+  bool _getCell(int index) {
+    int rowIndex = _index2RowIndex(index);
+    int colIndex = _index2ColIndex(index);
+    if (rowIndex >= 0 &&
+        rowIndex < _rowSize &&
+        colIndex >= 0 &&
+        colIndex < _colSize) {
+      return _answerBoardModel.getCell(rowIndex, colIndex);
+    }
+    return null;
+  }
 
   void setCell(int rowIndex, int colIndex, bool value) =>
       _answerBoardModel.setCell(rowIndex, colIndex, value);
@@ -37,9 +64,50 @@ class GameController extends ControllerMVC {
     _colSize = colSize;
   }
 
-  int get boardRowSize => _rowSize;
+  int get boardRowSize => _rowSize + 1;
 
-  int get boardColSize => _colSize;
+  int get boardColSize => _colSize + 1;
+
+  int get boardSize => boardRowSize * boardColSize;
 
   bool get boardInited => _boardInited;
+
+  bool _isRowHintCell(int index) => index % boardColSize == 0;
+
+  bool _isColHintCell(int index) => index ~/ boardColSize == 0;
+
+  bool isHintCell(int index) => _isRowHintCell(index) || _isColHintCell(index);
+
+  bool isDotCell(int index) => _getCell(index) == true;
+
+  bool isCrossCell(int index) => _getCell(index) == false;
+
+  bool isHintOrUnknownCell(int index) =>
+      isHintCell(index) || _getCell(index) == null;
+
+  Color get defaultCellColor => _themeController.theme.data.cardColor;
+
+  Color get dotCellColor => _themeController.theme.data.iconTheme.color;
+
+  Color get borderColor => _themeController.theme.data.iconTheme.color;
+
+  int _index2RowIndex(int index) => (index - boardColSize) ~/ boardColSize;
+
+  int _index2ColIndex(int index) => (index - 1) % boardColSize;
+
+  bool boldAllBorder(int index) => isHintCell(index);
+
+  bool boldTopRightBorder(int index) =>
+      _index2RowIndex(index) % 5 == 0 && _index2ColIndex(index) % 5 == 4;
+  bool boldRightBottomBorder(int index) =>
+      _index2RowIndex(index) % 5 == 4 && _index2ColIndex(index) % 5 == 4;
+  bool boldBottomLeftBorder(int index) =>
+      _index2RowIndex(index) % 5 == 4 && _index2ColIndex(index) % 5 == 0;
+  bool boldLeftTopBorder(int index) =>
+      _index2RowIndex(index) % 5 == 0 && _index2ColIndex(index) % 5 == 0;
+
+  bool boldTopBorder(int index) => _index2RowIndex(index) % 5 == 0;
+  bool boldRightBorder(int index) => _index2ColIndex(index) % 5 == 4;
+  bool boldBottomBorder(int index) => _index2RowIndex(index) % 5 == 4;
+  bool boldLeftBorder(int index) => _index2ColIndex(index) % 5 == 0;
 }
