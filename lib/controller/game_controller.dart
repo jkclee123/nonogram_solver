@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:nonogram_solver/model/board_model.dart';
+import 'package:nonogram_solver/service/game_service.dart';
 import 'package:theme_provider/theme_provider.dart';
 
 class GameController extends ControllerMVC {
@@ -9,7 +10,9 @@ class GameController extends ControllerMVC {
     _boardInited = false;
     _rowHintControllerList = [];
     _colHintControllerList = [];
+    _gameService = GameService();
   }
+  GameService _gameService;
   BoardModel _answerBoardModel;
   ThemeController _themeController;
   int _rowSize;
@@ -21,7 +24,7 @@ class GameController extends ControllerMVC {
   void initTheme(BuildContext context) =>
       _themeController = ThemeProvider.controllerOf(context);
 
-  void initBoard() {
+  bool initBoard() {
     if (_rowSize != null && _colSize != null) {
       _answerBoardModel.init(_rowSize, _colSize);
       _rowHintControllerList.clear();
@@ -31,15 +34,43 @@ class GameController extends ControllerMVC {
       _colHintControllerList =
           List.generate(_colSize, (_) => TextEditingController());
       _boardInited = true;
+      return true;
     }
+    return false;
+  }
+
+  bool initSolver() {
+    List<List<int>> rowHintList = List.generate(
+        _rowSize,
+        (index) => _rowHintControllerList[index]
+            .text
+            .split(" ")
+            .map((hintStr) => int.tryParse(hintStr) ?? 0));
+    List<List<int>> colHintList = List.generate(
+        _rowSize,
+        (index) => _colHintControllerList[index]
+            .text
+            .split(" ")
+            .map((hintStr) => int.tryParse(hintStr)));
+
+    List<int> rowHintSumList = List.generate(_rowSize,
+        (index) => rowHintList[index].reduce((sum, hint) => sum + hint + 1));
+    List<int> colHintSumList = List.generate(_colSize,
+        (index) => colHintList[index].reduce((sum, hint) => sum + hint + 1));
+    if (rowHintSumList.any((hintSum) => hintSum > _rowSize) ||
+        colHintSumList.any((hintSum) => hintSum > _colSize)) {
+      return false;
+    }
+    return true;
   }
 
   TextEditingController getHintController(index) {
-    if (_isRowHintCell(index)) {
+    if (isRowHintCell(index)) {
       return _rowHintControllerList[index ~/ boardColSize - 1];
-    } else if (_isColHintCell(index)) {
+    } else if (isColHintCell(index)) {
       return _colHintControllerList[index - 1];
     }
+    return null;
   }
 
   bool _getCell(int index) {
@@ -72,11 +103,11 @@ class GameController extends ControllerMVC {
 
   bool get boardInited => _boardInited;
 
-  bool _isRowHintCell(int index) => index % boardColSize == 0;
+  bool isRowHintCell(int index) => index % boardColSize == 0;
 
-  bool _isColHintCell(int index) => index ~/ boardColSize == 0;
+  bool isColHintCell(int index) => index ~/ boardColSize == 0;
 
-  bool isHintCell(int index) => _isRowHintCell(index) || _isColHintCell(index);
+  bool isHintCell(int index) => isRowHintCell(index) || isColHintCell(index);
 
   bool isDotCell(int index) => _getCell(index) == true;
 

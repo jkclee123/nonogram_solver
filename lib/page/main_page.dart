@@ -4,6 +4,8 @@ import 'package:nonogram_solver/controller/game_controller.dart';
 import 'package:nonogram_solver/config/style_config.dart';
 import 'package:nonogram_solver/config/const.dart' as Const;
 import 'package:mvc_pattern/mvc_pattern.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:trotter/trotter.dart' as Trotter;
 
 class MainPage extends StatefulWidget {
   MainPage({Key key, this.title}) : super(key: key);
@@ -15,7 +17,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends StateMVC<MainPage> {
   _MainPageState() : super(GameController()) {
-    _gameController = new GameController();
+    _gameController = GameController();
   }
   GameController _gameController;
 
@@ -23,6 +25,12 @@ class _MainPageState extends StateMVC<MainPage> {
   void initState() {
     _gameController.setSize(10, 10);
     super.initState();
+    // var list = List.generate(10, (index) => index);
+    // var combos = Trotter.Combinations(3, list);
+    // for (final combo in combos()) {
+    //   print(combo);
+    // }
+    // print(combos.length);
   }
 
   @override
@@ -35,7 +43,7 @@ class _MainPageState extends StateMVC<MainPage> {
             widget.title,
           ),
         ),
-        body: LayoutBuilder(builder: (context, constraints) {
+        body: LayoutBuilder(builder: (_, constraints) {
           StyleConfig().init(constraints);
           return Center(
               child: Column(children: <Widget>[
@@ -49,11 +57,13 @@ class _MainPageState extends StateMVC<MainPage> {
                 : SizedBox(
                     height: StyleConfig.boardHeight,
                     width: StyleConfig.boardWidth,
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: _gameController.boardColSize),
-                      itemBuilder: (_, index) => _getCell(index),
+                    child: StaggeredGridView.countBuilder(
+                      crossAxisCount: _gameController.boardColSize + 1,
                       itemCount: _gameController.boardSize,
+                      itemBuilder: (_, index) => _getCell(index),
+                      staggeredTileBuilder: (int index) => StaggeredTile.count(
+                          _gameController.isRowHintCell(index) ? 2 : 1,
+                          _gameController.isColHintCell(index) ? 2 : 1),
                     ))
           ]));
         }));
@@ -229,6 +239,10 @@ class _MainPageState extends StateMVC<MainPage> {
         inputFormatters: <TextInputFormatter>[
           FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
         ],
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+        ),
       );
     } else if (_gameController.isCrossCell(index)) {
       return FittedBox(

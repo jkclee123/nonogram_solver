@@ -20,10 +20,10 @@ class StyleConfig {
 
     edgeInsets = _screenHeight * _edgeInsetsMultiplier;
     boardHeight = _screenWidth >= _screenHeight
-        ? _screenHeight * 0.8
-        : _screenHeight * 0.8;
+        ? _screenHeight * 0.9
+        : _screenHeight * 0.9;
     boardWidth = _screenWidth >= _screenHeight
-        ? _screenHeight * 0.8
-        : _screenWidth * 0.8;
+        ? _screenHeight * 0.9
+        : _screenWidth * 0.9;
   }
 }
