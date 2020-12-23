@@ -6,7 +6,7 @@ import 'package:theme_provider/theme_provider.dart';
 
 class GameController extends ControllerMVC {
   GameController([StateMVC state]) : super(state) {
-    _answerBoardModel = BoardModel();
+    // _answerBoardModel = BoardModel();
     _boardInited = false;
     _rowHintControllerList = [];
     _colHintControllerList = [];
@@ -26,7 +26,7 @@ class GameController extends ControllerMVC {
 
   bool initBoard() {
     if (_rowSize != null && _colSize != null) {
-      _answerBoardModel.init(_rowSize, _colSize);
+      // _answerBoardModel.init(_rowSize, _colSize);
       _rowHintControllerList.clear();
       _colHintControllerList.clear();
       _rowHintControllerList =
@@ -80,7 +80,8 @@ class GameController extends ControllerMVC {
         rowIndex < _rowSize &&
         colIndex >= 0 &&
         colIndex < _colSize) {
-      return _answerBoardModel.getCell(rowIndex, colIndex);
+      // return _answerBoardModel.getCell(rowIndex, colIndex);
+      return true;
     }
     return null;
   }

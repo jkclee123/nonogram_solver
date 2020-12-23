@@ -5,7 +5,7 @@ import 'package:nonogram_solver/config/style_config.dart';
 import 'package:nonogram_solver/config/const.dart' as Const;
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:trotter/trotter.dart' as Trotter;
+import 'package:nonogram_solver/model/solver_model.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({Key key, this.title}) : super(key: key);
@@ -23,14 +23,9 @@ class _MainPageState extends StateMVC<MainPage> {
 
   @override
   void initState() {
-    _gameController.setSize(10, 10);
+    // _gameController.setSize(10, 10);
     super.initState();
-    // var list = List.generate(10, (index) => index);
-    // var combos = Trotter.Combinations(3, list);
-    // for (final combo in combos()) {
-    //   print(combo);
-    // }
-    // print(combos.length);
+    SolverModel([], []);
   }
 
   @override

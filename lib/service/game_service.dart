@@ -4,8 +4,8 @@ import 'package:trotter/trotter.dart';
 
 class GameService extends ControllerMVC {
   GameService([StateMVC state]) : super(state) {
-    dotBoardModel = BoardModel();
-    crossBoardModel = BoardModel();
+    // dotBoardModel = BoardModel();
+    // crossBoardModel = BoardModel();
   }
   BoardModel dotBoardModel;
   BoardModel crossBoardModel;
