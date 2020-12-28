@@ -2,21 +2,18 @@ import 'dart:io';
 import 'package:nonogram_solver/util/range_utils.dart';
 
 class BoardModel {
-  int _boardSize;
+  int _rowSize;
   List<List<bool>> _boardArray;
 
   BoardModel(int boardSize) {
-    _boardSize = boardSize;
+    _rowSize = boardSize;
     _boardArray = [
-      for (var _ in RangeUtils.range(0, _boardSize))
-        [for (var _ in RangeUtils.range(0, _boardSize)) null]
+      for (var _ in RangeUtils.range(0, _rowSize))
+        [for (var _ in RangeUtils.range(0, _rowSize)) null]
     ];
   }
 
-  int get boardSize => _boardSize;
-
-  bool getCell(int index) =>
-      _getCell(_index2RowIndex(index), _index2ColIndex(index));
+  int get boardSize => _rowSize;
 
   void setCell(int rowIndex, int colIndex, bool value) {
     if (_indexOutOfRange(rowIndex, colIndex)) throw ("Index Out Of Range");
@@ -24,15 +21,16 @@ class BoardModel {
   }
 
   void consolePrintBoard() {
+    print("");
     stdout.write("\n");
-    for (int rowIndex in RangeUtils.range(0, _boardSize)) {
+    for (int rowIndex in RangeUtils.range(0, _rowSize)) {
       if (rowIndex != 0 && rowIndex % 5 == 0) {
-        for (int _ in RangeUtils.range(0, _boardSize)) {
+        for (int _ in RangeUtils.range(0, _rowSize)) {
           stdout.write("--");
         }
         stdout.write("\n");
       }
-      for (int colIndex in RangeUtils.range(0, _boardSize)) {
+      for (int colIndex in RangeUtils.range(0, _rowSize)) {
         if (colIndex != 0 && colIndex % 5 == 0) {
           stdout.write("| ");
         }
@@ -43,28 +41,22 @@ class BoardModel {
     stdout.write("\n");
   }
 
-  bool _getCell(int rowIndex, int colIndex) {
+  bool getCell(int rowIndex, int colIndex) {
     if (_indexOutOfRange(rowIndex, colIndex)) throw ("Index Out Of Range");
     return _boardArray[rowIndex][colIndex];
   }
 
-  bool _indexOutOfRange(rowIndex, colIndex) => rowIndex < 0 ||
-          colIndex < 0 ||
-          rowIndex > _boardSize ||
-          colIndex > _boardSize
-      ? true
-      : false;
-
-  int _index2RowIndex(int index) => (index - _boardSize) ~/ _boardSize;
-
-  int _index2ColIndex(int index) => (index - 1) % _boardSize;
+  bool _indexOutOfRange(rowIndex, colIndex) =>
+      rowIndex < 0 || colIndex < 0 || rowIndex > _rowSize || colIndex > _rowSize
+          ? true
+          : false;
 
   String _getCellDisplay(int rowIndex, int colIndex) {
-    if (_getCell(rowIndex, colIndex) == null) {
+    if (getCell(rowIndex, colIndex) == null) {
       return '  ';
-    } else if (_getCell(rowIndex, colIndex)) {
+    } else if (getCell(rowIndex, colIndex)) {
       return 'O ';
-    } else if (!_getCell(rowIndex, colIndex)) {
+    } else if (!getCell(rowIndex, colIndex)) {
       return 'X ';
     }
     return '  ';

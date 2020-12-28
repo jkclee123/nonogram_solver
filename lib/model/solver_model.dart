@@ -1,7 +1,6 @@
 import 'package:nonogram_solver/model/board_model.dart';
 import 'package:nonogram_solver/util/range_utils.dart';
 import 'package:trotter/trotter.dart';
-import 'package:collection/collection.dart';
 
 class SolverModel {
   List<List<int>> _rowHintList;
@@ -14,47 +13,58 @@ class SolverModel {
   Map<String, List<Set<int>>> _hintStrHintCombListMap;
   BoardModel _boardModel;
 
-  int get _boardSize => _colHintList.length;
+  int get _rowSize => _rowHintList.length;
 
-  List<int> get _fullList => List.generate(_boardSize, (index) => index);
+  BoardModel get boardModel => _boardModel;
+
+  List<int> get _fullList =>
+      [for (int index in RangeUtils.range(0, _rowSize)) index];
 
   Set<int> get _fullSet => Set<int>.of(_fullList);
+
+  List<Set<int>> get _emptySetList =>
+      [for (var _ in RangeUtils.range(0, _rowSize)) {}];
 
   List<List<int>> get _allHintList => _rowHintList + _colHintList;
 
   SolverModel(List<List<int>> rowHintList, List<List<int>> colHintList) {
+    // rowHintList = [
+    //   [2, 2],
+    //   [5],
+    //   [5],
+    //   [5],
+    //   [7],
+    //   [6],
+    //   [6],
+    //   [6],
+    //   [1, 6],
+    //   [9]
+    // ];
+    // colHintList = [
+    //   [2],
+    //   [1],
+    //   [3],
+    //   [10],
+    //   [10],
+    //   [9],
+    //   [10],
+    //   [10],
+    //   [3, 1],
+    //   [1]
+    // ];
     if (rowHintList == null ||
         colHintList == null ||
-        rowHintList.length != colHintList.length) {
-      throw ("Hint lists must not be null");
+        rowHintList.length == 0 ||
+        rowHintList.length != colHintList.length ||
+        rowHintList.any((hintList) =>
+            hintList.reduce((sum, hint) => sum += hint) > rowHintList.length) ||
+        colHintList.any((hintList) =>
+            hintList.reduce((sum, hint) => sum += hint) > rowHintList.length)) {
+      throw ("Invalid Hint lists");
     }
-    // _rowHintList = rowHintList.toList();
-    // _colHintList = colHintList.toList();
-    _rowHintList = [
-      [2, 2],
-      [5],
-      [5],
-      [5],
-      [7],
-      [6],
-      [6],
-      [6],
-      [1, 6],
-      [9]
-    ];
-    _colHintList = [
-      [2],
-      [1],
-      [3],
-      [10],
-      [10],
-      [9],
-      [10],
-      [10],
-      [3, 1],
-      [1]
-    ];
-    _boardModel = BoardModel(_boardSize);
+    _rowHintList = rowHintList.toList();
+    _colHintList = colHintList.toList();
+    _boardModel = BoardModel(_rowSize);
     _buildHintSumSet();
     _buildHintStrHintCombListMap();
     _buildRowBoxSetList();
@@ -62,7 +72,6 @@ class SolverModel {
     _fillHintStrHintCombListMap();
     _fillRowCombList();
     _fillColCombList();
-    step();
   }
 
   void _buildHintSumSet() {
@@ -79,17 +88,15 @@ class SolverModel {
   }
 
   void _buildRowBoxSetList() {
-    _rowBoxSetList = [for (var _ in RangeUtils.range(0, _boardSize)) {}];
+    _rowBoxSetList = _emptySetList.toList();
   }
 
   void _buildRowEmptySetList() {
-    _rowEmptySetList = [
-      for (var _ in RangeUtils.range(0, _boardSize)) _fullSet
-    ];
+    _rowEmptySetList = [for (var _ in RangeUtils.range(0, _rowSize)) _fullSet];
   }
 
   void _fillHintStrHintCombListMap() {
-    for (int sum in RangeUtils.range(1, _boardSize + 1)) {
+    for (int sum in RangeUtils.range(1, _rowSize + 1)) {
       if (!_hintSumSet.contains(sum)) continue;
       Combinations<int> combos = Combinations(sum, _fullList);
       for (List<int> posList in combos()) {
@@ -134,23 +141,22 @@ class SolverModel {
   }
 
   void step() {
-    _setCommon();
-    _removeComb();
+    if (isSolved()) return;
+    _removeRowComb();
+    _removeColComb();
+    _setRowCommon();
+    _setColCommon();
     _writeBoard();
     _boardModel.consolePrintBoard();
   }
 
-  void _setCommon() {
-    _setRowCommon();
-    _setColCommon();
-  }
-
-  void _removeComb() {
-    _removeRowComb();
+  bool isSolved() {
+    List<List<Set<int>>> allCombList = _rowCombList + _colCombList;
+    return !allCombList.any((combList) => combList.length > 1);
   }
 
   void _setRowCommon() {
-    for (int rowIndex in RangeUtils.range(0, _boardSize)) {
+    for (int rowIndex in RangeUtils.range(0, _rowSize)) {
       _rowBoxSetList[rowIndex] = _rowBoxSetList[rowIndex].union(
           _rowCombList[rowIndex].reduce(
               (commonBox, combList) => combList.intersection(commonBox)));
@@ -161,7 +167,7 @@ class SolverModel {
   }
 
   void _setColCommon() {
-    for (int colIndex in RangeUtils.range(0, _boardSize)) {
+    for (int colIndex in RangeUtils.range(0, _rowSize)) {
       Set<int> commonBox = _colCombList[colIndex]
           .reduce((commonBox, combList) => combList.intersection(commonBox));
       for (int rowIndex in commonBox) {
@@ -176,22 +182,40 @@ class SolverModel {
   }
 
   void _removeRowComb() {
-    for (int rowIndex in RangeUtils.range(0, _boardSize)) {
-      print(_rowCombList[rowIndex]);
-      _rowCombList[rowIndex].removeWhere((combSet) => _removefilter(
+    for (int rowIndex in RangeUtils.range(0, _rowSize)) {
+      _rowCombList[rowIndex].removeWhere((combSet) => _removeCombFilter(
           combSet, _rowBoxSetList[rowIndex], _rowEmptySetList[rowIndex]));
-      print(_rowCombList[rowIndex]);
-      print("");
     }
   }
 
-  bool _removefilter(Set<int> combSet, Set<int> boxSet, Set<int> emptySet) {
-    return !SetEquality().equals(boxSet.union(combSet), combSet) ||
-        !SetEquality().equals(emptySet.intersection(combSet), combSet);
+  void _removeColComb() {
+    List<Set<int>> colBoxSetList = _emptySetList.toList();
+    List<Set<int>> colEmptySetList = _emptySetList.toList();
+    for (int rowIndex in RangeUtils.range(0, _rowSize)) {
+      for (int colIndex in _rowBoxSetList[rowIndex]) {
+        colBoxSetList[colIndex].add(rowIndex);
+      }
+      for (int colIndex in _rowEmptySetList[rowIndex]) {
+        colEmptySetList[colIndex].add(rowIndex);
+      }
+    }
+    for (int colIndex in RangeUtils.range(0, _rowSize)) {
+      _colCombList[colIndex].removeWhere((combSet) => _removeCombFilter(
+          combSet, colBoxSetList[colIndex], colEmptySetList[colIndex]));
+    }
+  }
+
+  bool _removeCombFilter(Set<int> combSet, Set<int> boxSet, Set<int> emptySet) {
+    return boxSet.difference(combSet).length > 0 ||
+        _fullSet
+                .difference(emptySet)
+                .difference(_fullSet.difference(combSet))
+                .length >
+            0;
   }
 
   void _writeBoard() {
-    for (int rowIndex in RangeUtils.range(0, _boardSize)) {
+    for (int rowIndex in RangeUtils.range(0, _rowSize)) {
       for (int colIndex in _rowBoxSetList[rowIndex]) {
         _boardModel.setCell(rowIndex, colIndex, true);
       }

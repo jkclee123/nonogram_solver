@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nonogram_solver/controller/game_controller.dart';
+import 'package:nonogram_solver/controller/main_page_controller.dart';
 import 'package:nonogram_solver/config/style_config.dart';
 import 'package:nonogram_solver/config/const.dart' as Const;
 import 'package:mvc_pattern/mvc_pattern.dart';
@@ -16,16 +16,14 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends StateMVC<MainPage> {
-  _MainPageState() : super(GameController()) {
-    _gameController = GameController();
+  _MainPageState() : super(MainPageController()) {
+    _gameController = MainPageController();
   }
-  GameController _gameController;
+  MainPageController _gameController;
 
   @override
   void initState() {
-    // _gameController.setSize(10, 10);
     super.initState();
-    SolverModel([], []);
   }
 
   @override
@@ -53,12 +51,12 @@ class _MainPageState extends StateMVC<MainPage> {
                     height: StyleConfig.boardHeight,
                     width: StyleConfig.boardWidth,
                     child: StaggeredGridView.countBuilder(
-                      crossAxisCount: _gameController.boardColSize + 1,
-                      itemCount: _gameController.boardSize,
+                      crossAxisCount: _gameController.displayRowSize,
+                      itemCount: _gameController.displayBoardSize,
                       itemBuilder: (_, index) => _getCell(index),
                       staggeredTileBuilder: (int index) => StaggeredTile.count(
-                          _gameController.isRowHintCell(index) ? 2 : 1,
-                          _gameController.isColHintCell(index) ? 2 : 1),
+                          _gameController.isRowHintCell(index) ? 1 : 1,
+                          _gameController.isColHintCell(index) ? 1 : 1),
                     ))
           ]));
         }));
@@ -264,7 +262,25 @@ class _MainPageState extends StateMVC<MainPage> {
             color: Colors.redAccent,
             child: Icon(Icons.refresh_outlined),
             onPressed: () {
-              setState(() => _gameController.initBoard());
+              setState(() => _gameController.initBoard(10));
+            },
+          )),
+      Padding(
+          padding: EdgeInsets.all(20),
+          child: RaisedButton(
+            color: Colors.blue,
+            child: Icon(Icons.star),
+            onPressed: () {
+              setState(() => _gameController.initSolver());
+            },
+          )),
+      Padding(
+          padding: EdgeInsets.all(20),
+          child: RaisedButton(
+            color: Colors.green,
+            child: Icon(Icons.next_plan),
+            onPressed: () {
+              setState(() => _gameController.step());
             },
           ))
     ];
